@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastify_app
+    ports:
+      - "3010:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/hasura_docker_db"
+      JWT_SECRET: "your-secret-key"
+      PORT: 3010
+      HOST: 0.0.0.0
+    depends_on:
+      - db
+    command: >
+      sh -c "
+      npx prisma migrate deploy &&
+      npm run start:prod
+      "
+
+  db:
+    image: postgres:15-alpine
+    container_name: fastify_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hasura_docker_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
